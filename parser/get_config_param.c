@@ -9,7 +9,7 @@ static int handler(void* user, const char* section, const char* name,
     configuration* pconfig = (configuration*)user;
 
     #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
-    if (MATCH("marsh", "key")) {
+    if (MATCH("marsh", pconfig->name)) {
         pconfig->key = strdup(value);
 
     } else {

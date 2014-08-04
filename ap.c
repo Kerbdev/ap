@@ -16,7 +16,10 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include "parser/get_config_param.h"
+#include "krb/krb.h"
+#include "dynamic/dynamic.h"
+#include "query/request.h"
+#include "mess/mess.h"
 #define BACKLOG 10
 #define PORT "3491"  // порт, на который будут приходить соединения
 
@@ -37,7 +40,7 @@ void *get_in_addr(struct sockaddr *sa)
 }
 
 int main(void)
-{
+{char key_ap[]="Hell";
     int sockfd, new_fd;  // слушаем на sock_fd, новые соединения - на new_fd
     struct addrinfo hints, *servinfo, *p;
     struct sockaddr_storage their_addr; // информация об адресе клиента
@@ -46,8 +49,6 @@ int main(void)
     int yes=1;
     char s[INET6_ADDRSTRLEN];
     int rv;
-	configuration conf;
-	get_config_param(&conf);
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
@@ -118,10 +119,18 @@ int main(void)
 
         if (!fork()) { // тут начинается дочерний процесс
         	close(sockfd);// дочернему процессу не нужен слушающий сокет
-        	char p[12];
 
-        	recv(new_fd,p,sizeof(p),0);
-        	printf("%s",p);
+        	krb5_ap_req *ap_req=calloc(1,sizeof(krb5_ap_req));
+        	malloc_krb5_ap_req(ap_req);
+        	krb5_error *error=calloc(1,sizeof(krb5_error));
+        	malloc_krb5_error(error);
+        	recv_krb5_ap_req(new_fd,ap_req,error);
+        	check_krb5_ap_req(ap_req,key_ap);
+        	krb5_ap_rep *ap_rep=calloc(1,sizeof(krb5_ap_rep));
+        		malloc_krb5_ap_rep(ap_rep);
+        	krb5_ap_rep_imp(ap_rep,ap_req);
+        	send_krb5_ap_rep(new_fd,*ap_rep);
+
 
 
 
